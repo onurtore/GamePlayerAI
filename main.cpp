@@ -6,30 +6,30 @@
 #include <stdio.h>
 #include <cstring>
 
-#define computervs true
-
-
+#define HumanVSComputer false
+#define MAXIMIZE 1
+#define MINIMIZE 0
 
 using namespace std;
 
 
 
 
-
-
 char board[8][8] = {};
 char new_board[8][8] = {};
+char cols[] = {'a','b','c','d','e','f','g'};
+char enemy_type;
+
 int rows[] = {1,2,3,4,5,6,7};
 int *player1a_rocks;
 int *player1b_rocks;
-
 int *player2a_rocks;
 int *player2b_rocks;
-
 int *computer1a_rocks;
 int *computer1b_rocks;
+int number_of_piece;
 
-char cols[] = {'a','b','c','d','e','f','g'};
+void computer_move();
 void print_board();
 void getInitial_POS();
 void move();
@@ -47,40 +47,6 @@ int down[2]  = {1,0};
 
 
 bool whoAmI;
-char enemy_type;
-int number_of_piece;
-
-
-
-
-class state {
-
-public:
-	int isVisited;
-	char s_board[8][8] ;
-	int alpha;
-	int beta;
-	int val;
-	int* computer1a_rocks;
-	int* computer1b_rocks;
-	
-	state(int piece){
-		
-		memcpy (s_board,board,sizeof(board));
-		
-		
-		computer1a_rocks = new int[piece+1];
-		computer1b_rocks = new int[piece+1];
-		isVisited = false;
-	}
-	
-};
-
-
-
-
-
-
 
 int main(int argc,char *argv[]){
 
@@ -97,23 +63,19 @@ int main(int argc,char *argv[]){
 	number_of_piece = strtol(argv[2], &p, 10);
 	
     
-	player1a_rocks = new int [number_of_piece+1];
-	player1b_rocks = new int [number_of_piece+1];
-	player2a_rocks = new int [number_of_piece+1];
-	player2b_rocks = new int [number_of_piece+1];
-	computer1a_rocks = new int[number_of_piece+1];
-	computer1b_rocks = new int[number_of_piece+1];
+
 	
 	
     print_board();
 	create_Initial_POS(number_of_piece);
-//	getInitial_POS();
+	//	getInitial_POS(); //Elle girmek gerekirse
     cout << "\n\n\n";
 	print_board();
+	cout << "\n\n\n";
 	cout << "\nPlayer1 is X, Player2 is O\n\n";
     	
 	
-	if(!computervs){
+	if(HumanVSComputer){
 		cout << "Am i the Player 1";
 		cin >> whoAmI;
 		if(whoAmI){
@@ -125,8 +87,6 @@ int main(int argc,char *argv[]){
 			enemy_type = 'x';
 		}
 	}
-	
-
 	
 
 	while(true){
@@ -142,6 +102,12 @@ int main(int argc,char *argv[]){
 
 
 void player1_move(){
+	
+	if(HumanVSComputer){
+		if(whoAmI){
+			return computer_move();
+		}
+	}
 	
 	restart_move:
 	
@@ -182,6 +148,13 @@ void player1_move(){
 }
 
 void player2_move(){
+	
+	if(HumanVSComputer){
+		if(!whoAmI){
+			return computer_move();
+		}
+	}
+	
 	restart_move:
 	
 	string old_pos,new_pos;
@@ -217,62 +190,87 @@ void player2_move(){
 }
 
 
+class state {
+
+public:
+
+	char s_board[8][8];
+	int val;
+	
+	state(char o_board[8][8]){
+		for(int i = 0 ; i < 7; i ++){
+			for(int j = 0; j < 7 ; j++ ){
+				s_board[i][j] = o_board[i][j];
+			}
+		}	
+	}
+
+	void print_board(){
+		cout << setw(4) << " ";
+			for(int i = 0 ; i < 7 ; i++){
+				cout << setw(4) << rows[i];
+			}
+		cout << '\n';
+	
+    	for(int i = 0 ; i < 7 ; i++){
+			cout << setw(4) << cols[i];
+			for(int j = 0; j< 7 ; j++){
+            	cout << setw(4)<< board[i][j];
+        	}
+        cout << '\n';
+    	}
+	}
+};
+
+int heuristic(state node);
+
+int alphabeta(state node,int depth,int alpha,int beta,int node_type){
+
+	if(depth == 0){
+		return heuristic(node);
+	}
+
+	int v = 0;
+
+
+	if(node_type == MAXIMIZE){
+		v = -999;
+
+		
+
+		//for every taş,create successors,look for left right down up,create new node ,then apply same function.
+		for(int i = 0 ; i < 7 ; i++){
+
+			
+			//go left
+
+			//go right
+
+			//go up
+
+			//go down
+		}
+		/*	
+		
+		*/
+	}
+
+	else{
+
+	}
+}
+
+
 
 void computer_move(){
 	
-	state current_state(number_of_piece);
-	state max_state(number_of_piece);
+	state current_state(board);
 	
-/*	class state {
-	
-		int isVisited = false;
-		char board[8][8];
-		int alpha;
-		int beta;
-		int val;
-		int* computer1a_rocks;
-		int* computer2a_rocks;
-		
-		state(int piece,int board){
-			computer1a_rocks = new int[piece+1];
-			computer1b_rocks = new int[piece+1];
-			this.board = board;
-		}
-		
-	}
-*/		
+	int i = alphabeta(current_state,10,-999,+999,MAXIMIZE);
 
-
-
-	for(int i = 0 ; i < number_of_piece ; i++){
-		
-		//current_max_arr = findSuccessors(computer1a_rocks[i],computer1b_rocks[i]);
-				
-		
-	}
-	
 }
 
 /*
-//return array,value of this pos,and old pos and new pos of the rock
-int* findSuccessor(int row,int col){
-	
-	
-	/*
-	int left[2] = {0,-1};
-	int right[2] = {0,1};
-	int up[2]    = {-1,0};
-	int down[2]  = {1,0};
-
-
-	*/
-	/*
-	new_board = board;
-	
-	int max = 0;
-	int global_max = 0;
-	int move_arr[5];
-	
 	for(int i = 0 ; i < 3;i ++){
 		//left
 		//is valid  and empty pos
@@ -367,15 +365,16 @@ int evaluate_pos(){
 }
 */
 
+
+//is new position is a valid position
 bool isValid(int i, int j ){
 	return ((new_board[i][j] == ' ') && (i <= 7) && (j <= 7) && (i >= 0) && (j >= 0)); 
 }
 
 
 
-
+//print the board
 void print_board(){
-	
 	
 	cout << setw(4) << " ";
 	for(int i = 0 ; i < 7 ; i++){
@@ -393,78 +392,53 @@ void print_board(){
     }
 }
 
+
+//Create initial pos manual
 void getInitial_POS(){
 	
 	char p;
-	 for(int i = 0 ; i < 7 ; i++){
-        for(int j = 0; j< 7 ; j++){
+	for(int i = 0 ; i < 7 ; i++){
+    	for(int j = 0; j< 7 ; j++){
 			cout <<  "Enter value for " << cols[i] << rows[j] << ":";
 			cin >> p;
 			board[i][j] = p;
         }
     }
-	
-
 }
 
 
+
+//Create initial random position
 void create_Initial_POS(int number_of_piece){
 	
-		int player1_counter = 0;
-		int player2_counter = 0;
-		int random_number;
+	int player1_counter = 0;
+	int player2_counter = 0;
+	int random_number;
 		
+	for(int i = 0; i < 7; i++){
+		for(int j = 0; j < 7 ; j++){
+			board[i][j] = ' ';
+		}
+	}
+	srand(time(NULL));
+	while( (player1_counter + player2_counter  ) < (2* number_of_piece)  ){
+	
 		for(int i = 0; i < 7; i++){
-			for(int j = 0; j < 7 ; j++){
-				board[i][j] = ' ';
-			}
-		}
-		srand(time(NULL));
-		while( (player1_counter + player2_counter  ) < (2* number_of_piece)  ){
-			
-			for(int i = 0; i < 7; i++){
-				for(int j = 0; j < 7; j++){
-					random_number = rand() % 2 + 0;
+			for(int j = 0; j < 7; j++){
+				random_number = rand() % 2 + 0;
 
-					if(random_number == 1 && (board[i][j] == ' ') ){
-							random_number = rand() % 2 + 0;
-							if(random_number == 0 && ( player1_counter < number_of_piece) ){
-									board[i][j] = 'x';
-									player1_counter++;
-							}
-							else if(random_number == 1 && ( player2_counter < number_of_piece ) ){
-									board[i][j] = 'o';
-									player2_counter++;
-							}
-					}
+				if(random_number == 1 && (board[i][j] == ' ') ){
+						random_number = rand() % 2 + 0;
+						if(random_number == 0 && ( player1_counter < number_of_piece) ){
+								board[i][j] = 'x';
+								player1_counter++;
+						}
+						else if(random_number == 1 && ( player2_counter < number_of_piece ) ){
+								board[i][j] = 'o';
+								player2_counter++;
+						}
 				}
 			}
 		}
-		player1_counter = 0;
-		player2_counter = 0;
-		for(int i = 0;  i< 7 ; i++){
-			for(int j = 0; j < 7 ; j++){
-				if(board[i][j] == 'x'){
-					player1a_rocks[player1_counter] = i;
-					player1b_rocks[player1_counter] = j;
-					player1_counter++;
-				}
-				else if(board[i][j] == 'o'){
-					player1a_rocks[player2_counter] = i;
-					player1b_rocks[player2_counter] = j;
-					player2_counter++;
-				}
-			}
-		}
-		
-		if(whoAmI){
-			computer1a_rocks = player1a_rocks;
-			computer1b_rocks = player1b_rocks;
-		}
-		else{
-			computer1a_rocks = player2a_rocks;
-			computer1b_rocks = player2b_rocks;
-		}
-		
-//		cout << "aaaa: " << player1_counter << " bbbbb" << player2_counter << "\n";
+	}
 }
