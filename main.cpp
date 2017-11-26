@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <cstring>
 #include <fstream>
-
+#include <sstream>
 
 #define HUMANVSMACHINE true
 #define MAXIMIZE 1
@@ -40,8 +40,9 @@ void player1_move();
 void player2_move();
 void computer_move();
 
-string str;
+ostringstream boardSS;
 string heuristic_str;
+string str;
 
 int main(int argc,char *argv[]){
 
@@ -214,6 +215,13 @@ public:
 };
 
 
+  std::string NumberToString ( int Number )
+  {
+     std::ostringstream ss;
+     ss << Number;
+     return ss.str();
+  }
+
 int heuristic(state node){
 
 
@@ -238,8 +246,9 @@ int heuristic(state node){
 			}
 		}
 	}
+	
 
-	heuristic_str += to_string(val) + ',';
+	heuristic_str += NumberToString(val) + ',';
 	return val;
 	
 }
@@ -262,7 +271,31 @@ int min(int x,int y){
 	}
 }
 
+
+void print_state(state node){
+	
+	
+		boardSS << setw(4) << " ";
+			for(int i = 0 ; i < 7 ; i++){
+				boardSS << setw(4) << rows[i];
+			}
+		boardSS << '\n';
+	
+    	for(int i = 0 ; i < 7 ; i++){
+			boardSS << setw(4) << cols[i];
+			for(int j = 0; j< 7 ; j++){
+            	boardSS << setw(4)<< node.s_board[i][j];
+			}
+			boardSS <<'\n';
+
+    	}
+        boardSS << "\n\n\n";
+}
+
+
 int alphabeta(state node,int depth,int alpha,int beta,int node_type){
+
+	//print_state(node);
 
 	if(depth == 0){
 		return heuristic(node);
@@ -272,7 +305,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 
 
 	if(node_type == MAXIMIZE){
-		v = -9999;
+		v = -999;
 
 		
 
@@ -281,7 +314,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 			for(int  j = 0  ; j < 7 ; j ++){
 				if(node.s_board[i][j] == my_type){
 					if((j-1 >= 0 && node.s_board[i][j-1] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i][j-1] = new_state.s_board[i][j]; 
 						new_state.s_board[i][j] = ' '; 
 						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
@@ -292,7 +325,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 						alpha = max(alpha,v);
 					}
 					if((j+1 <= 7 && node.s_board[i][j+1] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i][j+1] = new_state.s_board[i][j];
 						new_state.s_board[i][j] = ' '; 
 						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
@@ -304,7 +337,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 						
 					}
 					if((i-1 >= 0 && node.s_board[i-1][j] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i-1][j] = new_state.s_board[i][j];
 						new_state.s_board[i][j] = ' ';
 						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
@@ -315,7 +348,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 						alpha = max(alpha,v);
 					}
 					if((i+1 <= 7 && node.s_board[i+1][j] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i+1][j] = new_state.s_board[i][j];
 						new_state.s_board[i][j] = ' '; 
 						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
@@ -343,7 +376,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 			for(int  j = 0  ; j < 7 ; j ++){
 				if(node.s_board[i][j] == enemy_type){
 					if((j-1 >= 0 && node.s_board[i][j-1] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i][j-1] = new_state.s_board[i][j]; 
 						new_state.s_board[i][j] = ' '; 
 						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
@@ -354,7 +387,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 						beta = min(beta,v);
 					}
 					if((j+1 <= 7 && node.s_board[i][j+1] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i][j+1] = new_state.s_board[i][j];
 						new_state.s_board[i][j] = ' '; 
 						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
@@ -366,7 +399,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 						
 					}
 					if((i-1 >= 0 && node.s_board[i-1][j] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i-1][j] = new_state.s_board[i][j];
 						new_state.s_board[i][j] = ' ';
 						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
@@ -377,7 +410,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 						beta = min(beta,v);
 					}
 					if((i+1 <= 7 && node.s_board[i+1][j] == ' ' )){
-						state new_state(board);
+						state new_state(node.s_board);
 						new_state.s_board[i+1][j] = new_state.s_board[i][j];
 						new_state.s_board[i][j] = ' '; 
 						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
@@ -398,17 +431,24 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 }
 
 void writeStrToFile(){
-	/*
+	
 	ofstream myfile;
 	myfile.open ("output.txt");
 	myfile << str;
 	myfile.close();
-	*/
+	
 
 	ofstream myfile2;
 	myfile2.open("str_output.txt");
 	myfile2 << heuristic_str;
 	myfile2.close();
+
+	ofstream myfile3;
+	myfile3.open("board_output.txt");
+	myfile3 << boardSS.str();
+	myfile3.close();
+
+
 }
 
 
