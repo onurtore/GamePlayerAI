@@ -5,86 +5,80 @@
 #include <time.h>
 #include <stdio.h>
 #include <cstring>
+#include <fstream>
 
-#define HumanVSComputer false
+
+#define HUMANVSMACHINE true
 #define MAXIMIZE 1
 #define MINIMIZE 0
 
 using namespace std;
 
-
-
-
+//global board
 char board[8][8] = {};
-char new_board[8][8] = {};
+
+//meaningful output
 char cols[] = {'a','b','c','d','e','f','g'};
-char enemy_type;
-
 int rows[] = {1,2,3,4,5,6,7};
-int *player1a_rocks;
-int *player1b_rocks;
-int *player2a_rocks;
-int *player2b_rocks;
-int *computer1a_rocks;
-int *computer1b_rocks;
-int number_of_piece;
 
-void computer_move();
-void print_board();
+//o or x
+bool whoAmI;
+char enemy_type;
+char my_type;
+
+//command line arguments
+int number_of_piece;
+int turn_limit;
+
 void getInitial_POS();
-void move();
-void findSuccessors(int x,int y);
-void get_move();
-void move_board(string,string);
+void create_Initial_POS(int);
+void print_board();
+
+
+
 void player1_move();
 void player2_move();
-void create_Initial_POS(int);
+void computer_move();
 
-int left[2] = {0,-1};
-int right[2] = {0,1};
-int up[2]    = {-1,0};
-int down[2]  = {1,0};
-
-
-bool whoAmI;
+string str;
+string heuristic_str;
 
 int main(int argc,char *argv[]){
 
     char *p,*t;
-	
 	
 	if(argc < 3 ){
 		cout << "More argument needed\n";
 		return 42;
 	}
 
-
-	int  turn_limit =  strtol(argv[1], &p, 10);
+	turn_limit =  strtol(argv[1], &p, 10);
 	number_of_piece = strtol(argv[2], &p, 10);
 	
-    
-
-	
-	
+	//Print initial board
     print_board();
+
+	//Create a random position
 	create_Initial_POS(number_of_piece);
-	//	getInitial_POS(); //Elle girmek gerekirse
-    cout << "\n\n\n";
+		//getInitial_POS();
+    
 	print_board();
-	cout << "\n\n\n";
-	cout << "\nPlayer1 is X, Player2 is O\n\n";
-    	
 	
-	if(HumanVSComputer){
-		cout << "Am i the Player 1";
-		cin >> whoAmI;
+	cout << "Player1 is X, Player2 is O\n\n";
+    
+	
+	if(HUMANVSMACHINE){
+		cout << "Am i the Player 1:";
+		cin  >> whoAmI;
 		if(whoAmI){
-			cout << "I am the player 1 play with x\n";
+			cout << "\nI am the player1 play with x\n";
 			enemy_type = 'o';
+			my_type = 'x';
 		}
 		else{
-			cout << "I am the player 2 play with o\n";
+			cout << "I am the player2 play with o\n";
 			enemy_type = 'x';
+			my_type = 'o';
 		}
 	}
 	
@@ -103,8 +97,9 @@ int main(int argc,char *argv[]){
 
 void player1_move(){
 	
-	if(HumanVSComputer){
+	if(HUMANVSMACHINE){
 		if(whoAmI){
+			cout << "My Turn(Player1)\n";
 			return computer_move();
 		}
 	}
@@ -141,16 +136,13 @@ void player1_move(){
 
     board[new_row][new_col] = board[old_row][old_col];
     board[old_row][old_col] = ' ';
-
-
-
-
 }
 
 void player2_move(){
 	
-	if(HumanVSComputer){
+	if(HUMANVSMACHINE){
 		if(!whoAmI){
+			cout << "My turn(Player2)\n";
 			return computer_move();
 		}
 	}
@@ -189,7 +181,6 @@ void player2_move(){
     board[old_row][old_col] = ' ';
 }
 
-
 class state {
 
 public:
@@ -222,7 +213,54 @@ public:
 	}
 };
 
-int heuristic(state node);
+
+int heuristic(state node){
+
+
+	int val = 0;
+
+	for(int i = 0; i < 7;i++){
+		for(int j = 0; j < 7 ; j++){
+			if(node.s_board[i][j] == enemy_type){
+
+				if(! (j-1 >= 0 && node.s_board[i][j-1] == ' ' ) ){
+					val = val + 5;
+				}
+				if(! (j+1 <= 7 && node.s_board[i][j+1] == ' ' )){
+					val = val + 5;
+				}
+				if(! (i-1 >= 0 && node.s_board[i-1][j] == ' ' )){
+					val = val + 5;
+				}
+				if(! (i+1 <= 7 && node.s_board[i+1][j] == ' ' )){
+					val = val + 5;
+				}
+			}
+		}
+	}
+
+	heuristic_str += to_string(val) + ',';
+	return val;
+	
+}
+
+int max(int x,int y){
+	if(x >= y){
+		return x;
+	}
+	else{
+		return y;
+	}
+}
+
+int min(int x,int y){
+	if(x >= y){
+		return y;
+	}
+	else{
+		return x;
+	}
+}
 
 int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 
@@ -234,142 +272,158 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 
 
 	if(node_type == MAXIMIZE){
-		v = -999;
+		v = -9999;
 
 		
 
 		//for every taş,create successors,look for left right down up,create new node ,then apply same function.
 		for(int i = 0 ; i < 7 ; i++){
+			for(int  j = 0  ; j < 7 ; j ++){
+				if(node.s_board[i][j] == my_type){
+					if((j-1 >= 0 && node.s_board[i][j-1] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i][j-1] = new_state.s_board[i][j]; 
+						new_state.s_board[i][j] = ' '; 
+						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
+						if( v >= beta){
+							str += "beta pruning\n";
+							return v;
+						}
+						alpha = max(alpha,v);
+					}
+					if((j+1 <= 7 && node.s_board[i][j+1] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i][j+1] = new_state.s_board[i][j];
+						new_state.s_board[i][j] = ' '; 
+						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
+						if( v >= beta){
+							str += "beta pruning\n";
+							return v;
+						}
+						alpha = max(alpha,v);
+						
+					}
+					if((i-1 >= 0 && node.s_board[i-1][j] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i-1][j] = new_state.s_board[i][j];
+						new_state.s_board[i][j] = ' ';
+						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
+						if( v >= beta){
+							str += "beta pruning\n";
+							return v;
+						}
+						alpha = max(alpha,v);
+					}
+					if((i+1 <= 7 && node.s_board[i+1][j] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i+1][j] = new_state.s_board[i][j];
+						new_state.s_board[i][j] = ' '; 
+						v = max(v,alphabeta(new_state,depth-1,alpha,beta,MINIMIZE));
+						if( v >= beta){
+							str += "beta pruning\n";
+							return v;
+						}
+						alpha = max(alpha,v);
+					}
+				}
+
+			}
+		}
+		str += "no pruning\n";
+		return v;
 
 			
-			//go left
-
-			//go right
-
-			//go up
-
-			//go down
-		}
-		/*	
-		
-		*/
 	}
 
 	else{
+		v = +999;
 
+		//for every taş,create successors,look for left right down up,create new node ,then apply same function.
+		for(int i = 0 ; i < 7 ; i++){
+			for(int  j = 0  ; j < 7 ; j ++){
+				if(node.s_board[i][j] == enemy_type){
+					if((j-1 >= 0 && node.s_board[i][j-1] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i][j-1] = new_state.s_board[i][j]; 
+						new_state.s_board[i][j] = ' '; 
+						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
+						if( v <= alpha){
+							str += "alpha pruning\n";
+							return v;
+						}
+						beta = min(beta,v);
+					}
+					if((j+1 <= 7 && node.s_board[i][j+1] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i][j+1] = new_state.s_board[i][j];
+						new_state.s_board[i][j] = ' '; 
+						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
+						if( v <= alpha){
+							str += "alpha pruning\n";
+							return v;
+						}
+						beta = min(beta,v);
+						
+					}
+					if((i-1 >= 0 && node.s_board[i-1][j] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i-1][j] = new_state.s_board[i][j];
+						new_state.s_board[i][j] = ' ';
+						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
+						if( v <= alpha){
+							str += "alpha pruning\n";
+							return v;
+						}
+						beta = min(beta,v);
+					}
+					if((i+1 <= 7 && node.s_board[i+1][j] == ' ' )){
+						state new_state(board);
+						new_state.s_board[i+1][j] = new_state.s_board[i][j];
+						new_state.s_board[i][j] = ' '; 
+						v = min(v,alphabeta(new_state,depth-1,alpha,beta,MAXIMIZE));
+						if( v <= alpha){
+							str += "alpha pruning\n";
+							return v;
+						}
+						beta = min(beta,v);
+
+					}
+				}
+
+			}
+		}
+		str += "no pruning\n";
+		return v;
 	}
 }
 
+void writeStrToFile(){
+	/*
+	ofstream myfile;
+	myfile.open ("output.txt");
+	myfile << str;
+	myfile.close();
+	*/
+
+	ofstream myfile2;
+	myfile2.open("str_output.txt");
+	myfile2 << heuristic_str;
+	myfile2.close();
+}
 
 
 void computer_move(){
 	
 	state current_state(board);
-	
-	int i = alphabeta(current_state,10,-999,+999,MAXIMIZE);
+
+//	int alphabeta(state node,int depth,int alpha,int beta,int node_type)
+	int i = alphabeta(current_state,9,-999,+999,MAXIMIZE);
+
+	writeStrToFile();
 
 }
 
-/*
-	for(int i = 0 ; i < 3;i ++){
-		//left
-		//is valid  and empty pos
-		if( (!(col - 1 < 0))  && board[row][col-1] == ' ' ) {
-			//left successor
-			new_board[row][col-1] = new_board[row][col];
-			new_board[row][col] = ' ';
-			max = evalue_pos(new_board);
-			if(max > move_arr[0]){
-				move_arr[0] = max;
-				move_arr[1] = row;
-				move_arr[2] = col;
-				move_arr[3] = row;
-				move_arr[4] = col-1;
-			}
-		}
-		new_board = board;
-		//right
-		//is valid  and empty pos
-		if( (!(col + 1 > 7)) && board[row][col+1] == ' '){
-			//right succesor
-			new_board[row][col+1] = new_board[row][col];
-			new_board[row][col] = ' ';
-			max = evalue_pos(new_board);
-			if(max > move_arr[0]){
-				move_arr[0] = max;
-				move_arr[1] = row;
-				move_arr[2] = col;
-				move_arr[3] = row;
-				move_arr[4] = col+1;
-			}
-		}
-		new_board = board;
-		//up
-		//is valid  and empty pos
-		if((!(row -1 < 0 )) && board[row-1][col] == ' '  ){
-			//up successor
-			new_board[row-1][col] = new_board[row][col];
-			new_board[row][col] = ' ';
-			max = evalue_pos(new_board);
-			if(max > move_arr[0]){
-				move_arr[0] = max;
-				move_arr[1] = row;
-				move_arr[2] = col;
-				move_arr[3] = row-1;
-				move_arr[4] = col;
-			}
-		}
-		new_board = board;
-		//down
-		//is valid  and empty pos
-		if( (!(row + 1 > 7)) && board[row+1][col] == ' ' ){
-			//down successor
-			new_board[row+1][col] = new_board[row][col];
-			new_board[row][col] = ' ';
-			max = evalue_pos(new_board);
-			if(max > move_arr[0]){
-				move_arr[0] = max;
-				move_arr[1] = row;
-				move_arr[2] = col;
-				move_arr[3] = row+1;
-				move_arr[4] = col;
-			}
-		}
-		new_board = board;
-	}
-	return move_arr;
-}
-*/
-/*
-int evaluate_pos(){
 
-	/*
-	int left[2] = {0,-1};
-	int right[2] = {0,1};
-	int up[2]    = {-1,0};
-	int down[2]  = {1,0};
-
-
-	*/
-	
-/*
-	for(int i = 0 ; i < 7 ; i++){
-		for(int j = 0; j < 7 ; j++){
-			if(new_board[i][j] == enemy_type){
-					if(isValid(i,j);
-			}
-		
-		}
-		
-	}
-}
-*/
-
-
-//is new position is a valid position
-bool isValid(int i, int j ){
-	return ((new_board[i][j] == ' ') && (i <= 7) && (j <= 7) && (i >= 0) && (j >= 0)); 
-}
 
 
 
@@ -442,3 +496,6 @@ void create_Initial_POS(int number_of_piece){
 		}
 	}
 }
+
+
+
