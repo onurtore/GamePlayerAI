@@ -496,7 +496,7 @@ int alphabeta(state node,int depth,int alpha,int beta,int node_type){
 			v = alphabeta(child,depth-1,alpha,beta,MINIMIZE);
 			if(v > alpha ){
 				alpha = v;
-				if(depth == 6){
+				if(depth == 7){
 					ai_best_move.copy_board(child.s_board);
 				}
 			} 
@@ -603,7 +603,6 @@ void computer_move(){
 	
 	state current_state(board);
 
-	
     int i =  alphabeta(current_state,7,-999,+999,MAXIMIZE);
 
 	print_move(board,ai_best_move.s_board);
@@ -643,13 +642,13 @@ void print_board(){
 //Create initial pos manual
 void getInitial_POS(){
 
-	char s;	
+	char input[8];
 	for(int i = 0 ; i < 7 ; i++){
-    	for(int j = 0; j< 7 ; j++){
-			cout <<  "Enter value for " << cols[i] << rows[j] << ":";
-			scanf("%c",s);
-			board[i][j] = s;
-        }
+			cout <<  "Enter first column no:" <<  i << '\n' ;	
+			cin.getline(input,sizeof(input));
+			for(int j = 0 ; j < 7 ; j++){
+				board[i][j] = input[j];
+			}
     }
 }
 
